@@ -7,6 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 import time
+import json
+from urllib.parse import urlparse
 
 
 def create_driver(headless=True):
@@ -29,9 +31,18 @@ def create_driver(headless=True):
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
+scraping_targets = []
+with open("input-links.txt", "r") as fh:
+    scraping_targets[:] = list(map(str.strip, fh.readlines()))
 
-def scrape_example(url):
-    driver = create_driver(headless=False)
+final_result: list[dict] = []
+
+main_driver = create_driver(headless=False)
+
+
+
+def scrape_one_url(url, driver=main_driver):
+    result = {}
 
     try:
         driver.get(url)
@@ -41,30 +52,89 @@ def scrape_example(url):
         # Wait for page body to load
         wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
-        # Example: extract page title
-        title = driver.title
+        # Click reject cookies if it exists
+        reject_cookies_buttons = driver.find_elements(By.id, 'onetrust-reject-all-handler')
+        if reject_cookies_buttons:
+            reject_cookies_buttons[0].click()
 
-        # Example: extract all links
-        links = driver.find_elements(By.TAG_NAME, "a")
-        extracted_links = [link.get_attribute("href") for link in links if link.get_attribute("href")]
+        # core scraping
 
-        return {
-            "title": title,
-            "links": extracted_links
-        }
 
+        job_title = driver.find_element(By.XPATH, "/html/body/main/main/div[1]/div[2]/div[1]/h1").text
+        result["job_title"] = job_title
+        company = urlparse(url).path.strip("/").split("/")[1]
+        result["company"] = company
+        result["url"] = url
+
+        details_container = driver.find_element(By.XPATH, '//*[@id="overview-section"]/div/div[1]/div[1]/div/span')
+        time_0, time_1, grades, assessments, level = details_container.text.split("\n")
+        time = time_0 + ' ' time_1
+
+        result.update(dict(zip(("time", "grades", "assessments", "level"), (time, grades, assessments, level))))
+
+        skills_view_all_button = driver.find_element(By.xpath, '//*[@id="overview-section"]/div/div[2]/div/div[2]/button')
+        skills_view_all_button.click()
+
+        skills_container = driver.find_element(By.xpath, '//*[@id="radix-:R3i99uutpuu4q:"]/div[2]')
+        skills = [element.text for element in skills_container]
+        result["skills"] = skills
+
+        skills_section_close_button = driver.find_element(By.xpath, '//*[@id="radix-:R3i99uutpuu4q:"]/button/svg')
+        skills_section_close_button.click()
+
+        tasks_section_header = driver.find_element(By.xpath, '//*[@id="sticky-tabs"]/div[2]/button[3]')
+        tasks_section_header.click()
+
+        # tasks_container = driver.find_element(By.xpath, )
+
+
+
+
+
+
+    
     except TimeoutException:
         print("Page load timed out")
         return None
 
-    finally:
-        driver.quit()
+
+scrape_one_url('https://www.theforage.com/simulations/commonwealth-bank/intro-cybersecurity-rdxl')
+
+# def scrape_example(url):
+#     driver = create_driver(headless=False)
+
+#     try:
+#         driver.get(url)
+
+#         wait = WebDriverWait(driver, 15)
+
+#         # Wait for page body to load
+#         wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+
+#         # Example: extract page title
+#         title = driver.title
+
+#         # Example: extract all links
+#         links = driver.find_elements(By.TAG_NAME, "a")
+#         extracted_links = [link.get_attribute("href") for link in links if link.get_attribute("href")]
+
+#         return {
+#             "title": title,
+#             "links": extracted_links
+#         }
+
+#     except TimeoutException:
+#         print("Page load timed out")
+#         return None
+
+#     finally:
+#         driver.quit()
 
 
-if __name__ == "__main__":
-    url = "https://example.com"
-    data = scrape_example(url)
+# if __name__ == "__main__":
+#     url = "https://example.com"
+#     data = scrape_example(url)
 
-    if data:
-        print("Title:", data["title"])
-        print("Found", len(data["links"]), "links")
+#     if data:
+#         print("Title:", data["title"])
+#         print("Found", len(data["links"]), "links")
