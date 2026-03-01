@@ -1,7 +1,7 @@
 [
     {
         "1": {
-            "title": "Job Title",
+            "job_title": "Job Title",
             "company": "Company Name",
             "url": "https://example.com",
             "time": "Self-paced 30-60 mins",
