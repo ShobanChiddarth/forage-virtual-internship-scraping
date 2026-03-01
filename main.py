@@ -43,7 +43,7 @@ action = ActionChains(main_driver)
 
 
 
-def scrape_one_url(url, driver=main_driver):
+def scrape_one_url(url, driver=main_driver) -> dict:
     result = {}
 
     try:
@@ -60,7 +60,6 @@ def scrape_one_url(url, driver=main_driver):
             reject_cookies_buttons[0].click()
 
         # core scraping
-
 
         job_title = driver.find_element(By.XPATH, "/html/body/main/main/div[1]/div[2]/div[1]/h1").text
         result["job_title"] = job_title
@@ -85,6 +84,8 @@ def scrape_one_url(url, driver=main_driver):
         skills_section_close_button = driver.find_element(By.XPATH, '//*[@id="radix-:R3i99uutpuu4q:"]/button')
         skills_section_close_button.click()
 
+        tasks = []
+
         tasks_section_header = driver.find_element(By.XPATH, '//*[@id="sticky-tabs"]/div[2]/button[3]')
         tasks_section_header.click()
 
@@ -97,18 +98,16 @@ def scrape_one_url(url, driver=main_driver):
             task_title = task_button.find_element(By.CSS_SELECTOR, 'span.w-full').text
             task_content_container = driver.find_element(By.XPATH, "//*[@class='flex items-start justify-start w-full py-8 px-6 gap-4 flex-col h-fit']")
 
-            print(task_content_container.text)
-            break
+            task_content = task_content_container.text
+            task_title = task_content.split("\n")[0].split(':')[0]
+            task_content = task_content.split("\n")[0].split(':')[1] + task_content.split("\n")[1:]
 
+            tasks.append({task_title:task_content})
+        
+        result["tasks"] = tasks
 
+        return result
 
-
-
-
-
-
-
-    
     except TimeoutException:
         print("Page load timed out")
         return None
