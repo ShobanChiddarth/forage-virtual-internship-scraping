@@ -3,10 +3,7 @@
         "job_title": "Job Title",
         "company": "Company Name",
         "url": "https://example.com",
-        "time": "Self-paced 30-60 mins",
-        "grades": "No grades",
-        "assessments": "No assessments",
-        "level": "Introductory",
+        "details": ["Self-paced", "30-60 mins", "No grades", "No assessments", "Introductory"],
         "skills_gained": ["Cybersecurity", "Penatration Testing", "Incident Response"],
         "tasks": [
             {
