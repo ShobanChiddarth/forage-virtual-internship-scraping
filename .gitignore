@@ -6,6 +6,7 @@
 input-links.txt
 output.json
 outputs-archive/*
+!outputs-archive/.gitkeep
 
 ### Linux ###
 *~
