@@ -5,6 +5,7 @@
 ### Custom ###
 input-links.txt
 output.json
+outputs-archive/*
 
 ### Linux ###
 *~
