@@ -42,7 +42,6 @@ main_driver = create_driver(headless=False)
 action = ActionChains(main_driver)
 
 
-
 def scrape_one_url(url, driver=main_driver) -> dict:
     result = {}
 
@@ -68,10 +67,9 @@ def scrape_one_url(url, driver=main_driver) -> dict:
         result["url"] = url
 
         details_container = driver.find_element(By.XPATH, '//*[@id="overview-section"]/div/div[1]/div[1]/div/span')
-        time_0, time_1, grades, assessments, level = details_container.text.split("\n")
-        time = time_0 + ' ' + time_1
+        details = details_container.text.split("\n")
 
-        result.update(dict(zip(("time", "grades", "assessments", "level"), (time, grades, assessments, level))))
+        result["details"] = details
 
         skills_view_all_button = driver.find_element(By.XPATH, '//*[@id="overview-section"]/div/div[2]/div/div[2]/button')
         action.move_to_element(skills_view_all_button).perform()
@@ -99,10 +97,7 @@ def scrape_one_url(url, driver=main_driver) -> dict:
             task_content_container = driver.find_element(By.XPATH, "//*[@class='flex items-start justify-start w-full py-8 px-6 gap-4 flex-col h-fit']")
 
             task_content = task_content_container.text
-            task_title = task_content.split("\n")[0].split(':')[0]
-            task_content = task_content.split("\n")[0].split(':')[1] + task_content.split("\n")[1:]
-
-            tasks.append({task_title:task_content})
+            tasks.append(task_content)
         
         result["tasks"] = tasks
 
@@ -112,8 +107,12 @@ def scrape_one_url(url, driver=main_driver) -> dict:
         print("Page load timed out")
         return None
 
+for target in scraping_targets:
+    print("Hitting:", target)
+    final_result.append(scrape_one_url(target))
 
-scrape_one_url('https://www.theforage.com/simulations/commonwealth-bank/intro-cybersecurity-rdxl')
+with open("output.json", "w") as fh:
+    fh.write(json.dumps(final_result))
 
 # def scrape_example(url):
 #     driver = create_driver(headless=False)
